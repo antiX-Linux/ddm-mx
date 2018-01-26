@@ -37,12 +37,12 @@ ERR_FILE="/dev/null"
 TEXTDOMAINDIR=/usr/share/locale 
 export TEXTDOMAIN="ddm-mx"
 
-UNKNOWN_ERROR=$"Unknown error"
+UNKNOWN_ERROR=$"Unknown Error"
 OPTION_ERROR1=$"Option-"
 OPTION_ERROR2=$"requires an argument."
-RUN_AS_ROOT=$"Run as root"
+RUN_AS_ROOT=$"Run as Root"
 INSTALL_DRIVERS_FOR=$"Install drivers for: "
-NO_ATI=$"No AMD/ATI card found - exiting"
+NO_ATI=$"No ATI card found - exiting"
 RADEON_DRIVER_NEED=$"Radeon HD %s needs driver %s"
 
 
@@ -95,7 +95,7 @@ while getopts ":bi:p:ht" opt; do
     \?)
       # Invalid option: start GUI
       #launch_gui $@
-      echo $"Invalid option"
+      echo $"Invalid Option"
       exit 0
       ;;
     :)
@@ -105,7 +105,7 @@ while getopts ":bi:p:ht" opt; do
     *)
       # Unknown error: start GUI
       #launch_gui $@
-      echo $"Invalid option"
+      echo $"Invalid Option"
       exit 0
       ;;
   esac
@@ -288,7 +288,7 @@ for DRV in $INSTALL; do
       fi
 
       if [ "$DEVICEIDS" == "" ]; then
-	echo $"No nvidia card found - exiting" | tee -a $LOG
+	echo $"No Nvidia card found - exiting" | tee -a $LOG
 	exit 0
       fi
 
@@ -438,32 +438,8 @@ function install_fglrx {
   CANDIDATE=`env LANG=C apt-cache policy $DRIVER | grep Candidate | awk '{print $2}' | tr -d ' '`
   INSTALLED=`env LANG=C apt-cache policy $DRIVER | grep Installed | awk '{print $2}' | tr -d ' '`
 
-  echo "Candidate is: " $CANDIDATE
-  echo "Installed is: " $INSTALLED
-
-  if [ "$CANDIDATE" != "" ]; then
-      if [ "$INSTALLED" = "$CANDIDATE" ]; then
-        echo $"ati/amd driver already installed"
-        echo ""
-        echo $"Reinstall or quit?"
-        echo ""
-        echo 1: $"Reinstall"
-        echo 2: $"quit"
-        echo ""
-        echo "Enter Number of selection"
-        read -n 1 -e x
-
-        case $x in
-            1) echo $"reinstalling"... ;;
-            2) echo $"exiting"... && exit 0 ;;
-            *) echo $"invalid option."  $"exiting"... ;;
-        esac
-      fi
-  fi
-
   if [ "$CANDIDATE" == "" ]; then
-    echo $"fglrx driver not available, check your repo sources"
-    exit 3
+    exit 4
   fi
 
   echo "Need driver: $DRIVER ($CANDIDATE)" | tee -a $LOG
@@ -488,7 +464,7 @@ function install_fglrx {
   
 echo $"AMD/ATI packages to install are : "$DRIVER
 
-echo -n $"Press <Enter> to continue or Ctrl-c to exit"
+echo -n $"Press <Enter> to continue or CTRL+c to exit"
 read x
 
   # Preseed debconf answers
@@ -647,20 +623,11 @@ function install_nvidia {
   
   # Testing
   if $TEST; then
-    DRIVER='nvidia-legacy-340xx-driver'
+    DRIVER='nvidia-driver'
   fi
   
   CANDIDATE=`env LANG=C apt-cache policy $DRIVER | grep Candidate | awk '{print $2}' | tr -d ' '`
   INSTALLED=`env LANG=C apt-cache policy $DRIVER | grep Installed | awk '{print $2}' | tr -d ' '`
-
-  #check for possible source install
-  if [ -e /usr/bin/nvidia-installer ]; then
-    echo $"Possible previous install from source or smxi/sgfxi detected."
-    echo $"Version detected: " $(modinfo nvidia | grep ^version: | sed 's/[^0-9.]*//g')
-    echo $"Latest possible with this script : " $CANDIDATE
-    echo $"Please remove with  <sudo nvidia-install --uninstall> and reboot if you wish to proceed"
-    exit 0
-  fi
 
   # Check for Optimus
   OPTIMUS=$(lspci -vnn | grep '\[030[02]\]' | wc -l)
@@ -670,31 +637,8 @@ function install_nvidia {
     INSTALLED=`env LANG=C apt-cache policy $DRIVER | grep Installed | awk '{print $2}' | tr -d ' '`
   fi
 
-  echo "Candidate is: " $CANDIDATE
-  echo "Installed is: " $INSTALLED
-
-  if [ "$CANDIDATE" != "" ]; then
-      if [ "$INSTALLED" = "$CANDIDATE" ]; then
-        echo $"nvidia driver already installed"
-        echo ""
-        echo $"Reinstall or quit?"
-        echo ""
-        echo 1: $"Reinstall"
-        echo 2: $"quit"
-        echo ""
-        echo "Enter Number of selection"
-        read -n 1 -e x
-
-        case $x in
-            1) echo $"reinstalling"... ;;
-            2) echo $"exiting"... && exit 0 ;;
-            *) echo $"invalid option."  $"exiting"... ;;
-        esac
-      fi
-  fi
 
   if [ "$DRIVER" == "" ] || [ "$CANDIDATE" == "" ]; then
-    echo $"nvidia driver not available, check your repo sources"
     exit 3
   fi
 
@@ -713,26 +657,26 @@ function install_nvidia {
   case $DRIVER in 
                      nvidia-driver)    if [ "$ARCHITECTURE" == "x86_64" ]; then
 	                                   # Additional 32-bit drivers for 64-bit systems
-	                                   DRIVER="$DRIVER nvidia-settings nvidia-kernel-dkms libgl1-nvidia-glx:i386" 
+	                                   DRIVER="$DRIVER nvidia-settings libgl1-nvidia-glx:i386" 
                                        else
-                                           DRIVER="$DRIVER nvidia-kernel-dkms nvidia-settings" 
+                                           DRIVER="$DRIVER nvidia-settings" 
                                        fi
                                        ;;
         nvidia-legacy-340xx-driver)    if [ "$ARCHITECTURE" == "x86_64" ]; then
-                                           DRIVER="$DRIVER nvidia-settings-legacy-340xx nvidia-legacy-340xx-kernel-dkms libgl1-nvidia-legacy-340xx-glx:i386"
+                                           DRIVER="$DRIVER nvidia-settings-legacy-340xx libgl1-nvidia-legacy-340xx-glx:i386"
                                        else
-                                           DRIVER="$DRIVER nvidia-settings-legacy-340xx nvidia-legacy-340xx-kernel-dkms"
+                                           DRIVER="$DRIVER nvidia-settings-legacy-340xx"
                                        fi
                                        ;;
         nvidia-legacy-304xx-driver)    if [ "$ARCHITECTURE" == "x86_64" ]; then
-                                           DRIVER="$DRIVER nvidia-settings-legacy-304xx nvidia-legacy-304xx-kernel-dkms libgl1-nvidia-legacy-304xx-glx:i386"
+                                           DRIVER="$DRIVER nvidia-settings-legacy-304xx libgl1-nvidia-legacy-304xx-glx:i386"
                                        else
-                                           DRIVER="$DRIVER nvidia-settings-legacy-304xx nvidia-legacy-304xx-kernel-dkms"
+                                           DRIVER="$DRIVER nvidia-settings-legacy-304xx"
                                        fi
                                        ;;
                   bumblebee-nvidia)    if [ "$DRIVER" == "bumblebee-nvidia" ]; then
                                        # Bumblebee drivers
-                                       DRIVER="$DRIVER nvidia-driver nvidia-kernel-dkms primus primus-libs-ia32:i386 nvidia-settings libgl1-nvidia-glx:i386"
+                                       DRIVER="$DRIVER primus-libs-ia32:i386 nvidia-settings libgl1-nvidia-glx:i386"
                                        fi
                                        ;;
                                  *)
@@ -770,7 +714,7 @@ function install_nvidia {
 
 echo "NVIDIA packages to install are " $DRIVER
 
-echo -n $"Press <Enter> to continue or Ctrl-c to exit"
+echo -n $"Press <Enter> to continue or CTRL+c to exit"
 read x
  
   # Preseed debconf answers
@@ -810,8 +754,8 @@ read x
     else
       echo $"ERROR: Could not configure Bumblebee for user: " $USER | tee -a $LOG
     fi
-#  else
-#    nvidia-xconfig 2>/dev/null | tee -a $LOG
+  else
+    nvidia-xconfig 2>/dev/null | tee -a $LOG
   fi
   
   echo $"Finished" | tee -a $LOG
@@ -829,7 +773,7 @@ function purge_proprietary_drivers {
   apt-get purge -y $FORCE $(apt-cache pkgnames | grep fglrx | cut -d':' -f1) 2>&1 | tee -a $LOG
   apt-get purge -y $FORCE bumblebee* primus* primus*:i386 2>&1 | tee -a $LOG
   
-  echo $"Proprietary drivers removed" | tee -a $LOG
+  echo $"Propietary drivers removed" | tee -a $LOG
 }
 
 function install_open {
@@ -852,8 +796,6 @@ function install_open {
 clean_up()
 {
 unflock $LOCK_FILE
-echo ""
-echo ""
 echo -n $"Press <Enter> to exit"
 read x
 }
